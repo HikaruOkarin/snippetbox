@@ -1,18 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
+	mux.HandleFunc("/snippet/view", showSnippet)
 	mux.HandleFunc("/snippet/create", createSnippet)
 	mux.HandleFunc("/example/", ExStatic)
 
-	log.Println("Starting server on :4000")
+	log.Println("http://localhost:4000/")
+	log.Println("http://localhost:4000/snippet/create")
+	log.Println("http://localhost:4000/snippet/view")
 	err := http.ListenAndServe(":4000", mux)
 	if err != nil {
 		log.Fatal(err)
@@ -28,13 +32,20 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 func showSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Cache-Control", "public, max-age=31536000")
-	w.Header().Add("Cache-Control", "public")
-	w.Header().Add("Cache-Control", "max-age=31536000")
-	// w.Header().Del("Cache-Control")
-	w.Header().Get("Cache-Control")
+	// w.Header().Set("Cache-Control", "public, max-age=31536000")
+	// w.Header().Add("cACHE-CONTROL", "public")
+	// w.Header().Add("Cache-Control", "max-age=31536000")
+	// // w.Header().Del("Cache-Control")
+	// w.Header().Get("Cache-Control")
 
-	w.Write([]byte("Display a specific snippet... "))
+	// w.Write([]byte("Display a specific snippet... "))
+
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
+		return
+	}
+	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 }
 
 func createSnippet(w http.ResponseWriter, r *http.Request) {
