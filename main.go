@@ -2,32 +2,62 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
+		return
 	}
 	w.Write([]byte("Display the home page"))
 }
 
 func showSnippet(w http.ResponseWriter, r *http.Request) {
-	// headers := http.Header{}
-	w.Write([]byte("Display a specific snippet"))
+	// id := r.FormValue("id") // first method get value
+	id := r.URL.Query().Get("id")
+
+	Id, err := strconv.Atoi(id)
+	if err != nil || Id < 1 {
+		http.Error(w, "404 page not found", 404)
+		return
+	}
+
+	info := fmt.Sprintf("number of snipet id = %s", id)
+	w.Write([]byte(info + "\n"))
 }
 
 func createSnippet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.Header().Set("Cache-Control", "public, max-age=31536000")
+		file, err := os.Open("index.html")
+		if err != nil {
+			fmt.Println(false)
+			return
+		}
+		dat, err := ioutil.ReadAll(file)
+		fmt.Println(string(dat))
+		if err != nil {
+			fmt.Println(true)
+			return
+		}
+		fmt.Println(http.DetectContentType([]byte(dat))) // для хедера тип контента
+
+		w.Header()["anime-type"] = []string{"1;mode=block"}
+		w.Header().Set("cache-control", "naruto uzumaki")
 		// In contrast, the Add() method appends a new "Cache-Control" header and can
 		// be called multiple times.
 		w.Header().Add("Cache-Control", "public")
 		w.Header().Add("Cache-Control", "max-age=31536000")
+		w.Header()["Date"] = nil
+
 		// Delete all values for the "Cache-Control" header.
-		w.Header().Del("Cache-Control")
 		// Retrieve the first value for the "Cache-Control" header.
+
+		// дефолтные хедеры не удалить таким образам
 		data := w.Header().Get("Cache-Control")
 		fmt.Println(data)
 		// w.Header().Set("Allow", "POST")
@@ -36,7 +66,7 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 
 		// fmt.Println(content)
 		// w.Header().Del("Allow")
-		http.Error(w, "Method Not Allowed", 404) // w.WriteHeader(405) => использовать тока один раз && w.Write([]byte("some text"))
+		http.Error(w, "Method Not Allowed", 405) // w.WriteHeader(405) => использовать тока один раз && w.Write([]byte("some text"))
 		return
 	}
 
